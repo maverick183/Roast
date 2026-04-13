@@ -682,19 +682,18 @@ async function fetchEVMData(addr, chain) {
   const chainHex = chainMap[chain] || '0x1';
   const headers = { 'X-API-Key': MORALIS_API_KEY, accept: 'application/json' };
 
-  const [balRes, tokenRes, txRes] = await Promise.all([
+  // Fetch balance, tokens, and transactions in parallel (dropped unreliable /address endpoint)
+  const [balRes, tokenRes, txListRes] = await Promise.all([
     fetch(`https://deep-index.moralis.io/api/v2.2/${addr}/balance?chain=${chainHex}`, { headers }),
     fetch(`https://deep-index.moralis.io/api/v2.2/${addr}/erc20?chain=${chainHex}&limit=20`, { headers }),
-    fetch(`https://deep-index.moralis.io/api/v2.2/${addr}?chain=${chainHex}`, { headers })
+    fetch(`https://deep-index.moralis.io/api/v2.2/${addr}/transactions?chain=${chainHex}&limit=5`, { headers })
   ]);
 
   if (!balRes.ok) throw new Error(`Moralis balance error ${balRes.status}`);
   if (!tokenRes.ok) throw new Error(`Moralis token error ${tokenRes.status}`);
-  if (!txRes.ok) throw new Error(`Moralis tx error ${txRes.status}`);
 
   const balData   = await balRes.json();
   const tokenData = await tokenRes.json();
-  const txData    = await txRes.json();
 
   const nativeBal = (parseFloat(balData.balance || 0) / 1e18).toFixed(4);
 
@@ -704,17 +703,14 @@ async function fetchEVMData(addr, chain) {
     balance: (parseFloat(t.balance || 0) / Math.pow(10, parseInt(t.decimals || 18))).toFixed(4)
   })).slice(0, 10);
 
-  const txCount = txData.transactions_count || (txData.result || []).length || 0;
-
-  // Grab last 5 transactions
-  const txListRes = await fetch(
-    `https://deep-index.moralis.io/api/v2.2/${addr}/transactions?chain=${chainHex}&limit=5`,
-    { headers }
-  );
   let recentTxs = [];
+  let txCount = 0;
   if (txListRes.ok) {
     const txListData = await txListRes.json();
-    recentTxs = (txListData.result || []).slice(0, 5).map(tx => ({
+    const results = txListData.result || [];
+    // Use total from pagination if available, else count what we got
+    txCount = txListData.total ?? txListData.page_size ?? results.length;
+    recentTxs = results.slice(0, 5).map(tx => ({
       hash: tx.hash?.slice(0, 10) + '...',
       value: (parseFloat(tx.value || 0) / 1e18).toFixed(4),
       type: tx.input === '0x' ? 'Transfer' : 'Contract Interaction',
@@ -738,13 +734,15 @@ async function fetchSolanaData(addr) {
   const balData   = await balRes.json();
   const tokenData = tokenRes.ok ? await tokenRes.json() : [];
 
-  const nativeBal = (parseFloat(balData.solana || balData.lamports || 0) /
-    (balData.lamports ? 1e9 : 1)).toFixed(4);
+  // Moralis returns { "solana": "1.5" } as a string — parse directly
+  const nativeBal = parseFloat(balData.solana || '0').toFixed(4);
 
-  const tokens = (Array.isArray(tokenData) ? tokenData : []).map(t => ({
-    name: t.name || t.symbol || 'Unknown',
+  // Moralis Solana tokens: result array with amount field
+  const tokenArray = Array.isArray(tokenData) ? tokenData : (tokenData.result || []);
+  const tokens = tokenArray.map(t => ({
+    name: t.name || t.symbol || 'Unknown Token',
     symbol: t.symbol || '?',
-    balance: parseFloat(t.amount || 0).toFixed(4)
+    balance: parseFloat(t.amount ?? t.uiAmount ?? t.tokenAmount?.uiAmount ?? 0).toFixed(4)
   })).slice(0, 10);
 
   return { nativeBal, symbol: 'SOL', tokens, txCount: '—', recentTxs: [], chain: 'solana' };
@@ -753,13 +751,31 @@ async function fetchSolanaData(addr) {
 // ── Groq Roast Generation ───────────────────────────────────
 
 async function generateRoast(data, chain) {
+  const isEmpty = parseFloat(data.nativeBal) === 0 && data.tokens.length === 0;
+
   const tokenList = data.tokens.length > 0
     ? data.tokens.map(t => `${t.name} (${t.symbol}): ${t.balance}`).join(', ')
-    : 'No tokens found (truly empty bag energy)';
+    : 'No tokens — completely empty bag, ghost wallet energy';
 
   const txSummary = data.recentTxs.length > 0
     ? data.recentTxs.map(tx => `${tx.date} — ${tx.type} — ${tx.value} ${data.symbol}`).join(' | ')
-    : 'No recent transactions found';
+    : 'No recent transactions found (either a HODLer or completely inactive)';
+
+  const emptyNote = isEmpty
+    ? 'NOTE: This wallet is completely empty — zero balance, zero tokens. Roast them for being broke, rugged, or never having started.'
+    : '';
+
+  // Detect long-held tokens: tokens still in wallet but no sell txns in recent history
+  // We flag tokens that appear in holdings but have no matching outbound tx in recent 5
+  const recentOutTokens = (data.recentTxs || [])
+    .filter(tx => tx.type === 'Contract Interaction')
+    .map(tx => tx.date);
+  const hasRecentActivity = recentOutTokens.length > 0;
+  const longHoldNote = (!isEmpty && data.tokens.length > 0 && !hasRecentActivity && data.txCount !== '—' && parseInt(data.txCount) > 0)
+    ? `LONG HOLD FLAG: This wallet has ${data.tokens.length} token(s) — ${data.tokens.slice(0,3).map(t => t.name).join(', ')} — but NO recent sells or contract interactions in the last 5 transactions. These tokens appear to have been held for a long time without selling. Apply the Insider or Idiot? rule.`
+    : (data.tokens.length > 0 && data.recentTxs.length === 0)
+    ? `LONG HOLD FLAG: Wallet holds ${data.tokens.length} token(s) — ${data.tokens.slice(0,3).map(t => t.name).join(', ')} — with zero recent transaction history. Classic bag holder or stealth accumulator. Apply the Insider or Idiot? rule.`
+    : '';
 
   const userMessage = `Roast this wallet. Here is their on-chain data:
 Native balance: ${data.nativeBal} ${data.symbol}.
@@ -767,9 +783,17 @@ Tokens held: ${tokenList}.
 Last transactions: ${txSummary}.
 Total transactions: ${data.txCount}.
 Chain: ${CHAIN_LABELS[chain] || chain}.
+${emptyNote}
+${longHoldNote}
 Roast them.`;
 
-  const systemPrompt = `You are CT Roast Bot — a savage, funny Crypto Twitter personality who roasts wallets based on their real on-chain history. You speak fluent CT: you use terms like rug pull, degen, diamond hands, exit liquidity, ngmi, wagmi, cope, loss porn, paper hands, aping in, buying the top, catching a falling knife, rekt. Your roasts are brutal but funny — like a roast battle, not personal attacks. You reference SPECIFIC things from the wallet data: specific tokens held, specific transaction patterns, the balance, the number of transactions. Never be generic. Always make it feel like you actually looked at their wallet. Keep the roast to 4-6 sentences. End with one savage one-liner conclusion about their trading personality type.`;
+  const systemPrompt = `You are CT Roast Bot — a savage, funny Crypto Twitter personality who roasts wallets based on their real on-chain history. You speak fluent CT: you use terms like rug pull, degen, diamond hands, exit liquidity, ngmi, wagmi, cope, loss porn, paper hands, aping in, buying the top, catching a falling knife, rekt. Your roasts are brutal but funny — like a roast battle, not personal attacks. You reference SPECIFIC things from the wallet data: specific tokens held, specific transaction patterns, the balance, the number of transactions. Never be generic.
+
+IMPORTANT — LONG-HELD TOKENS RULE: If the wallet data flags any tokens as held for a long time with no recent sells, your roast MUST include:
+1. A roast of the hold — diamond hands cope, bag holder in denial, still waiting for the moon call that never came, etc. Reference the specific token name.
+2. An "Insider or Idiot?" verdict — genuinely analyze whether this looks like smart conviction holding or a rugged bag they can't face selling. Consider: low tx count + large position + legit token = possible insider. High tx count + tiny balance + random shitcoins = obvious bag holder. Write it exactly as: "🧠 Insider or Idiot? [your verdict here]". This should feel like real alpha analysis delivered with CT humor.
+
+Keep full output to 5-7 sentences total. End with one savage one-liner personality type verdict.`;
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -918,7 +942,7 @@ function downloadCard() {
 
   ctx.fillStyle = '#ff3c00';
   ctx.font = 'bold 16px monospace';
-  ctx.fillText('ct-wallet-roast.netlify.app', 40, H - 20);
+  ctx.fillText('roastmate.netlify.app', 40, H - 20);
 
   ctx.fillStyle = '#333';
   ctx.font = '11px monospace';
