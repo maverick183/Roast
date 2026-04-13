@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CT Wallet Roast 🔥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #101010;
+    --surface2: #161616;
+    --border: #222;
+    --accent: #ff3c00;
+    --accent2: #ff9500;
+    --green: #00ff88;
+    --text: #f0f0f0;
+    --muted: #555;
+    --danger: #ff2244;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Animated noise background */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 12vw, 96px);
+    letter-spacing: 2px;
+    line-height: 0.9;
+    background: linear-gradient(135deg, #ff3c00 0%, #ff9500 50%, #fff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease 0.1s both;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  input[type="text"]::placeholder {
+    color: #333;
+  }
+
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  select:focus { border-color: var(--accent); }
+
+  .chain-row {
+    display: none;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .chain-row.visible { display: block; }
+
+  .btn-roast {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-roast:hover { background: #ff5500; }
+  .btn-roast:active { transform: scale(0.99); }
+  .btn-roast:disabled { background: #2a2a2a; color: #444; cursor: not-allowed; }
+
+  .btn-roast .btn-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+
+  .btn-roast:not(:disabled):hover .btn-shine { transform: translateX(100%); }
+
+  /* Loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .loading.visible { display: block; }
+
+  .loading-skull {
+    font-size: 48px;
+    animation: pulse 0.8s ease-in-out infinite;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .loading-text {
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* Roast output */
+  .roast-output {
+    display: none;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .roast-output.visible { display: block; }
+
+  .roast-card-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .roast-card-display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  .roast-wallet-addr {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    word-break: break-all;
+  }
+
+  .roast-wallet-addr span {
+    color: var(--green);
+  }
+
+  .roast-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: 20px;
+    white-space: pre-wrap;
+  }
+
+  .roast-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .roast-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .roast-chain-badge {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+  }
+
+  /* Action buttons */
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .btn-download {
+    flex: 2;
+    background: var(--surface2);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-download:hover { background: rgba(255,149,0,0.1); }
+
+  /* Error */
+  .error-box {
+    display: none;
+    background: rgba(255,34,68,0.08);
+    border: 1px solid var(--danger);
+    padding: 16px 20px;
+    font-size: 12px;
+    color: var(--danger);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: none;
+    gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    animation: fadeIn 0.3s ease 0.1s both;
+  }
+
+  .stats-bar.visible { display: flex; }
+
+  .stat-item {
+    flex: 1;
+    padding: 14px 16px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    animation: fadeIn 0.6s ease 0.4s both;
+  }
+
+  /* Canvas (hidden, used for download) */
+  #roastCanvas { display: none; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (max-width: 500px) {
+    .action-row { flex-direction: column; }
+    .stats-bar { flex-wrap: wrap; }
+    .stat-item { min-width: 50%; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="roastCanvas" width="900" height="520"></canvas>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-tag">🔥 Crypto Twitter</div>
+    <h1>CT WALLET<br>ROAST</h1>
+    <p class="tagline">AI reads your on-chain sins. Judging starts now.</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="card">
+    <label>Paste Wallet Address</label>
+    <div class="input-row">
+      <input type="text" id="walletInput" placeholder="0x... or Solana address" autocomplete="off" spellcheck="false"/>
+    </div>
+
+    <div class="chain-row" id="chainRow">
+      <label>Select Chain</label>
+      <select id="chainSelect">
+        <option value="eth">Ethereum (ETH)</option>
+        <option value="bsc">BNB Chain (BSC)</option>
+        <option value="base">Base</option>
+        <option value="polygon">Polygon (MATIC)</option>
+        <option value="arbitrum">Arbitrum</option>
+      </select>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="btn-roast" id="roastBtn" onclick="startRoast()">
+      <span class="btn-shine"></span>
+      🔥 ROAST MY WALLET
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <span class="loading-skull">💀</span>
+    <div class="loading-text" id="loadingText">Digging through your blockchain sins...</div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <div class="stat-label">Native Balance</div>
+      <div class="stat-value" id="statBalance">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Tokens Held</div>
+      <div class="stat-value" id="statTokens">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Total Txns</div>
+      <div class="stat-value" id="statTxns">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Chain</div>
+      <div class="stat-value" id="statChain">—</div>
+    </div>
+  </div>
+
+  <!-- Roast Output -->
+  <div class="roast-output" id="roastOutput">
+    <div class="roast-card-display">
+      <div class="roast-wallet-addr">Wallet: <span id="displayAddr"></span></div>
+      <div class="roast-text" id="roastText"></div>
+      <div class="roast-footer">
+        <div class="roast-brand">CT WALLET ROAST</div>
+        <div class="roast-chain-badge" id="chainBadge"></div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-secondary" onclick="resetTool()">↩ Roast Another</button>
+      <button class="btn-download" onclick="downloadCard()">⬇ DOWNLOAD ROAST CARD</button>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    CT Wallet Roast &nbsp;·&nbsp; Built on Moralis + Groq &nbsp;·&nbsp; Your data is never stored
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONFIG — Replace these with your real API keys
+// ============================================================
+const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjBjY2U1MTZjLTMwMDctNDU2NC05MTdhLTMwMzA5NGVlOWUzNiIsIm9yZ0lkIjoiNTA5MzY5IiwidXNlcklkIjoiNTI0MDg2IiwidHlwZUlkIjoiMmQwZGVjNTUtOGMxNS00YWI1LWE1YjUtYThlZTI0MDM4MGJiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NzYwNTQ3NjEsImV4cCI6NDkzMTgxNDc2MX0.SyCVqQ20ZnwfMkffbdfwKrlZFoNbBQ_VxpIh2NoQv4U';
+const GROQ_API_KEY    = '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';
+// ============================================================
+
+const CHAIN_LABELS = {
+  eth: 'Ethereum',
+  bsc: 'BNB Chain',
+  base: 'Base',
+  polygon: 'Polygon',
+  arbitrum: 'Arbitrum',
+  solana: 'Solana'
+};
+
+const CHAIN_SYMBOLS = {
+  eth: 'ETH',
+  bsc: 'BNB',
+  base: 'ETH',
+  polygon: 'MATIC',
+  arbitrum: 'ETH',
+  solana: 'SOL'
+};
+
+let currentRoast = '';
+let currentWallet = '';
+let currentChain = '';
+
+// Auto-show chain dropdown for EVM addresses
+document.getElementById('walletInput').addEventListener('input', function () {
+  const val = this.value.trim();
+  const chainRow = document.getElementById('chainRow');
+  if (isEVM(val)) {
+    chainRow.classList.add('visible');
+  } else {
+    chainRow.classList.remove('visible');
+  }
+  hideError();
+});
+
+function isEVM(addr) {
+  return /^0x[0-9a-fA-F]{40}$/.test(addr);
+}
+
+function isSolana(addr) {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr);
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠ ' + msg;
+  box.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorBox').classList.remove('visible');
+}
+
+function setLoading(msg) {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loading').classList.add('visible');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('visible');
+}
+
+function resetTool() {
+  document.getElementById('roastOutput').classList.remove('visible');
+  document.getElementById('statsBar').classList.remove('visible');
+  document.getElementById('walletInput').value = '';
+  document.getElementById('chainRow').classList.remove('visible');
+  document.getElementById('roastBtn').disabled = false;
+  hideError();
+  hideLoading();
+  currentRoast = '';
+}
+
+async function startRoast() {
+  const addr = document.getElementById('walletInput').value.trim();
+  hideError();
+
+  if (!addr) {
+    showError('Paste a wallet address first, anon.');
+    return;
+  }
+
+  let chain = '';
+  if (isEVM(addr)) {
+    chain = document.getElementById('chainSelect').value;
+  } else if (isSolana(addr)) {
+    chain = 'solana';
+  } else {
+    showError('Invalid address format. Paste an ETH, BNB, Base, Polygon, Arbitrum, or Solana wallet address.');
+    return;
+  }
+
+  currentWallet = addr;
+  currentChain = chain;
+
+  document.getElementById('roastBtn').disabled = true;
+  document.getElementById('roastOutput').classList.remove('visible');
+  document.getElementById('statsBar').classList.remove('visible');
+
+  let walletData;
+  try {
+    setLoading('Digging through your blockchain sins...');
+    walletData = await fetchWalletData(addr, chain);
+  } catch (err) {
+    hideLoading();
+    document.getElementById('roastBtn').disabled = false;
+    showError('Failed to fetch wallet data: ' + err.message);
+    return;
+  }
+
+  try {
+    setLoading('CT Roast Bot is judging your life choices...');
+    const roast = await generateRoast(walletData, chain);
+    currentRoast = roast;
+    displayRoast(addr, chain, walletData, roast);
+  } catch (err) {
+    hideLoading();
+    document.getElementById('roastBtn').disabled = false;
+    showError('Roast generation failed: ' + err.message);
+    return;
+  }
+
+  hideLoading();
+}
+
+// ── Moralis Data Fetch ──────────────────────────────────────
+
+async function fetchWalletData(addr, chain) {
+  if (chain === 'solana') {
+    return await fetchSolanaData(addr);
+  } else {
+    return await fetchEVMData(addr, chain);
+  }
+}
+
+async function fetchEVMData(addr, chain) {
+  const chainMap = {
+    eth: '0x1',
+    bsc: '0x38',
+    base: '0x2105',
+    polygon: '0x89',
+    arbitrum: '0xa4b1'
+  };
+  const chainHex = chainMap[chain] || '0x1';
+  const headers = { 'X-API-Key': MORALIS_API_KEY, accept: 'application/json' };
+
+  const [balRes, tokenRes, txRes] = await Promise.all([
+    fetch(`https://deep-index.moralis.io/api/v2.2/${addr}/balance?chain=${chainHex}`, { headers }),
+    fetch(`https://deep-index.moralis.io/api/v2.2/${addr}/erc20?chain=${chainHex}&limit=20`, { headers }),
+    fetch(`https://deep-index.moralis.io/api/v2.2/${addr}?chain=${chainHex}`, { headers })
+  ]);
+
+  if (!balRes.ok) throw new Error(`Moralis balance error ${balRes.status}`);
+  if (!tokenRes.ok) throw new Error(`Moralis token error ${tokenRes.status}`);
+  if (!txRes.ok) throw new Error(`Moralis tx error ${txRes.status}`);
+
+  const balData   = await balRes.json();
+  const tokenData = await tokenRes.json();
+  const txData    = await txRes.json();
+
+  const nativeBal = (parseFloat(balData.balance || 0) / 1e18).toFixed(4);
+
+  const tokens = (tokenData.result || []).map(t => ({
+    name: t.name || t.symbol || 'Unknown',
+    symbol: t.symbol || '?',
+    balance: (parseFloat(t.balance || 0) / Math.pow(10, parseInt(t.decimals || 18))).toFixed(4)
+  })).slice(0, 10);
+
+  const txCount = txData.transactions_count || (txData.result || []).length || 0;
+
+  // Grab last 5 transactions
+  const txListRes = await fetch(
+    `https://deep-index.moralis.io/api/v2.2/${addr}/transactions?chain=${chainHex}&limit=5`,
+    { headers }
+  );
+  let recentTxs = [];
+  if (txListRes.ok) {
+    const txListData = await txListRes.json();
+    recentTxs = (txListData.result || []).slice(0, 5).map(tx => ({
+      hash: tx.hash?.slice(0, 10) + '...',
+      value: (parseFloat(tx.value || 0) / 1e18).toFixed(4),
+      type: tx.input === '0x' ? 'Transfer' : 'Contract Interaction',
+      date: tx.block_timestamp ? new Date(tx.block_timestamp).toLocaleDateString() : 'Unknown'
+    }));
+  }
+
+  return { nativeBal, symbol: CHAIN_SYMBOLS[chain], tokens, txCount, recentTxs, chain };
+}
+
+async function fetchSolanaData(addr) {
+  const headers = { 'X-API-Key': MORALIS_API_KEY, accept: 'application/json' };
+
+  const [balRes, tokenRes] = await Promise.all([
+    fetch(`https://solana-gateway.moralis.io/account/mainnet/${addr}/balance`, { headers }),
+    fetch(`https://solana-gateway.moralis.io/account/mainnet/${addr}/tokens`, { headers })
+  ]);
+
+  if (!balRes.ok) throw new Error(`Moralis Solana balance error ${balRes.status}`);
+
+  const balData   = await balRes.json();
+  const tokenData = tokenRes.ok ? await tokenRes.json() : [];
+
+  const nativeBal = (parseFloat(balData.solana || balData.lamports || 0) /
+    (balData.lamports ? 1e9 : 1)).toFixed(4);
+
+  const tokens = (Array.isArray(tokenData) ? tokenData : []).map(t => ({
+    name: t.name || t.symbol || 'Unknown',
+    symbol: t.symbol || '?',
+    balance: parseFloat(t.amount || 0).toFixed(4)
+  })).slice(0, 10);
+
+  return { nativeBal, symbol: 'SOL', tokens, txCount: '—', recentTxs: [], chain: 'solana' };
+}
+
+// ── Groq Roast Generation ───────────────────────────────────
+
+async function generateRoast(data, chain) {
+  const tokenList = data.tokens.length > 0
+    ? data.tokens.map(t => `${t.name} (${t.symbol}): ${t.balance}`).join(', ')
+    : 'No tokens found (truly empty bag energy)';
+
+  const txSummary = data.recentTxs.length > 0
+    ? data.recentTxs.map(tx => `${tx.date} — ${tx.type} — ${tx.value} ${data.symbol}`).join(' | ')
+    : 'No recent transactions found';
+
+  const userMessage = `Roast this wallet. Here is their on-chain data:
+Native balance: ${data.nativeBal} ${data.symbol}.
+Tokens held: ${tokenList}.
+Last transactions: ${txSummary}.
+Total transactions: ${data.txCount}.
+Chain: ${CHAIN_LABELS[chain] || chain}.
+Roast them.`;
+
+  const systemPrompt = `You are CT Roast Bot — a savage, funny Crypto Twitter personality who roasts wallets based on their real on-chain history. You speak fluent CT: you use terms like rug pull, degen, diamond hands, exit liquidity, ngmi, wagmi, cope, loss porn, paper hands, aping in, buying the top, catching a falling knife, rekt. Your roasts are brutal but funny — like a roast battle, not personal attacks. You reference SPECIFIC things from the wallet data: specific tokens held, specific transaction patterns, the balance, the number of transactions. Never be generic. Always make it feel like you actually looked at their wallet. Keep the roast to 4-6 sentences. End with one savage one-liner conclusion about their trading personality type.`;
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      max_tokens: 400,
+      temperature: 0.95
+    })
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `Groq error ${res.status}`);
+  }
+
+  const data2 = await res.json();
+  return data2.choices?.[0]?.message?.content?.trim() || 'Error generating roast.';
+}
+
+// ── Display ─────────────────────────────────────────────────
+
+function displayRoast(addr, chain, walletData, roast) {
+  // Stats bar
+  document.getElementById('statBalance').textContent = `${walletData.nativeBal} ${walletData.symbol}`;
+  document.getElementById('statTokens').textContent = walletData.tokens.length;
+  document.getElementById('statTxns').textContent = walletData.txCount;
+  document.getElementById('statChain').textContent = CHAIN_LABELS[chain] || chain;
+  document.getElementById('statsBar').classList.add('visible');
+
+  // Roast display
+  const shortAddr = addr.length > 20 ? addr.slice(0, 8) + '...' + addr.slice(-6) : addr;
+  document.getElementById('displayAddr').textContent = shortAddr;
+  document.getElementById('roastText').textContent = roast;
+  document.getElementById('chainBadge').textContent = CHAIN_LABELS[chain] || chain;
+  document.getElementById('roastOutput').classList.add('visible');
+
+  // Scroll to roast
+  setTimeout(() => {
+    document.getElementById('roastOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+// ── Canvas Download ─────────────────────────────────────────
+
+function downloadCard() {
+  const canvas = document.getElementById('roastCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#080808';
+  ctx.fillRect(0, 0, W, H);
+
+  // Top accent bar
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#ff3c00');
+  grad.addColorStop(1, '#ff9500');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, 4);
+
+  // Scanline effect
+  ctx.fillStyle = 'rgba(0,0,0,0.04)';
+  for (let y = 0; y < H; y += 4) {
+    ctx.fillRect(0, y, W, 2);
+  }
+
+  // Border
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(1, 1, W - 2, H - 2);
+
+  // Brand name
+  ctx.fillStyle = '#ff3c00';
+  ctx.font = 'bold 13px monospace';
+  ctx.letterSpacing = '4px';
+  ctx.fillText('CT WALLET ROAST', 40, 44);
+
+  // Wallet address
+  const addr = currentWallet;
+  const shortAddr = addr.length > 30 ? addr.slice(0, 14) + '...' + addr.slice(-10) : addr;
+  ctx.fillStyle = '#00ff88';
+  ctx.font = '11px monospace';
+  ctx.fillText(shortAddr, 40, 70);
+
+  // Chain badge
+  ctx.fillStyle = '#161616';
+  ctx.fillRect(W - 140, 30, 110, 24);
+  ctx.strokeStyle = '#333';
+  ctx.strokeRect(W - 140, 30, 110, 24);
+  ctx.fillStyle = '#555';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(CHAIN_LABELS[currentChain] || currentChain, W - 40, 46);
+  ctx.textAlign = 'left';
+
+  // Divider
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, 90);
+  ctx.lineTo(W - 40, 90);
+  ctx.stroke();
+
+  // Accent left bar for roast
+  ctx.fillStyle = '#ff3c00';
+  ctx.fillRect(40, 108, 3, H - 160);
+
+  // Roast text (word-wrapped)
+  ctx.fillStyle = '#f0f0f0';
+  ctx.font = '15px monospace';
+  const maxWidth = W - 120;
+  const words = currentRoast.split(' ');
+  let line = '';
+  let y = 130;
+  const lineHeight = 26;
+
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && n > 0) {
+      ctx.fillText(line.trim(), 56, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+      if (y > H - 80) {
+        ctx.fillText('...', 56, y);
+        break;
+      }
+    } else {
+      line = testLine;
+    }
+  }
+  if (y <= H - 80) ctx.fillText(line.trim(), 56, y);
+
+  // Footer
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, H - 52, W, 52);
+
+  ctx.fillStyle = '#ff3c00';
+  ctx.font = 'bold 16px monospace';
+  ctx.fillText('ct-wallet-roast.netlify.app', 40, H - 20);
+
+  ctx.fillStyle = '#333';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('Powered by Moralis + Groq AI', W - 40, H - 20);
+  ctx.textAlign = 'left';
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `ct-roast-${currentWallet.slice(0, 8)}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>
